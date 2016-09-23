@@ -1,24 +1,43 @@
 (function() {
   'use strict';
+  const mongoose = require('mongoose');
+  const express = require('express');
+  const bodyParser = require('body-parser');
+  const morgan = require('morgan');
+  const methodOverride = require('method-override');
+  const config = require('./server/config/environment');
+  const connect = require('./server/config/connection');
+  const app = express();
 
-  var mongoose = require('mongoose'),
-    db = require('./config/database'),
-    app = require('./config/express'),
-    port = process.env.PORT || 9000;
+
+  app.use(express.static('public'));
+
+  app.use(morgan('dev'));
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({
+    extended: true
+  }));
+
+  app.use(methodOverride());
+
+  // connect to database
+  connect(mongoose, config.database);
 
 
-  // Connect to the database
-  mongoose.connect(db.url || process.env.DATABASE_URL, function(err) {
+  app.get('/*', function(req, res) {
+    res.send({
+      message: 'You have reached the DMS-API'
+    });
+  });
+  // Listen to port
+  app.listen(config.port, function(err) {
     if (err) {
-      console.log('Error connecting to the db');
-    } else {
-      console.log('DB connection successful');
-    }
+      throw err;
+    };
+
+    console.log('Successfully connected to ' + config.port);
   });
 
-  // Listen to port
-  app.listen(port);
-  console.log('Successfully connected to ' + port);
 
   module.exports = app;
 
